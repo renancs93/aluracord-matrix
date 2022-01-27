@@ -1,3 +1,5 @@
+import Head from 'next/head';
+
 function GlobalStyle() {
   return (
     <style global jsx>{`
@@ -30,6 +32,10 @@ function GlobalStyle() {
 export default function MyApp({ Component, pageProps }) {
   return (
     <>
+      <Head>
+        <title>AluraCord</title>
+      </Head>
+
       <GlobalStyle/>
       <Component {...pageProps}/>
     </>

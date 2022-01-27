@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import appConfig from '../config.json';
 
-function Titulo(props) {
+function Title(props) {
   const Tag = props.tag || 'h1';
   return (
     <>
@@ -19,7 +19,7 @@ function Titulo(props) {
   );
 }
 
-export default function PaginaInicial() {
+export default function LoginPage() {
   const [username, setUsername] = useState('renancs93');
   const [counter, setCounter] = useState(username.length);
   const router = useRouter();
@@ -73,7 +73,7 @@ export default function PaginaInicial() {
               marginBottom: '32px',
             }}
           >
-            <Titulo tag='h1'>Boas vindas de volta!</Titulo>
+            <Title tag='h1'>Boas vindas de volta!</Title>
             <Text
               variant='body3'
               styleSheet={{
