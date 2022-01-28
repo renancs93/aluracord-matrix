@@ -6,31 +6,72 @@ import {
   Button,
   Icon,
 } from '@skynexui/components';
-import React, { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/router';
+import React, { useEffect, useState } from 'react';
+import Header from '../components/Header';
+import Loading from '../components/Loading';
 import appConfig from '../config.json';
 
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 export default function ChatPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [currentUser, setCurrentUser] = useState('');
   const [messageList, setMessageList] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    setIsLoading(true);
+
+    // Set User
+    const { username } = router.query;
+    setCurrentUser(username);
+
+    // Load Messages
+    supabaseClient
+      .from('messages')
+      .select('*')
+      .order('id', { ascending: false })
+      .then(({ data }) => {
+        setIsLoading(false); // remover
+        setMessageList(data);
+      });
+  }, []);
 
   function handleNewMessage() {
-
     // Validação
-    if (message.trim() === '')
-      return;
+    if (message.trim() === '') return;
 
     const newMessage = {
-      id: messageList.length + 1,
-      from: 'renancs93',
+      //id: messageList.length + 1,
+      from: currentUser,
       text: message,
     };
-    setMessageList([newMessage, ...messageList]);
+
+    supabaseClient
+      .from('messages')
+      .insert([newMessage])
+      .then(({ data, error }) => {
+        if (!error) setMessageList([data[0], ...messageList]);
+      });
+
     setMessage('');
   }
 
   function handleDeleteMessage(id) {
     const newList = messageList.filter((item) => item.id !== id);
-    setMessageList(newList);
+
+    supabaseClient
+      .from('messages')
+      .delete()
+      .match({ id: id })
+      .then(({ data, error }) => {
+        if (!error) setMessageList(newList);
+      });
   }
 
   return (
@@ -62,6 +103,7 @@ export default function ChatPage() {
         }}
       >
         <Header />
+        
         <Box
           styleSheet={{
             position: 'relative',
@@ -71,18 +113,50 @@ export default function ChatPage() {
             backgroundColor: appConfig.theme.colors.neutrals[600],
             flexDirection: 'column',
             borderRadius: '5px',
-            padding: '16px',
+            padding: '10px',
+            margin: '16px',
           }}
         >
-          <MessageList
-            messages={messageList}
-            onDeleteMessage={handleDeleteMessage}
-          />
+          {isLoading && (
+            <div
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, .1);',
+                position: 'absolute',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: '5px',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                zindex: 1
+              }}
+            >
+              <Loading />
+            </div>
+          )}
+
+          <Box
+            id='listContainer'
+            className='scrollbar'
+            styleSheet={{
+              overflowY: 'auto',
+              // marginBottom: '16px',
+              height: '85%',
+            }}
+          >
+            <MessageList
+              messages={messageList}
+              onDeleteMessage={handleDeleteMessage}
+            />
+          </Box>
 
           <Box
             styleSheet={{
               display: 'flex',
               alignItems: 'center',
+              marginTop: 'auto',
             }}
           >
             <TextField
@@ -120,7 +194,7 @@ export default function ChatPage() {
                 mainColorLight: appConfig.theme.colors.primary['500'],
                 mainColorStrong: appConfig.theme.colors.primary['900'],
               }}
-              onClick={()=> handleNewMessage()}
+              onClick={() => handleNewMessage()}
             />
           </Box>
         </Box>
@@ -129,42 +203,18 @@ export default function ChatPage() {
   );
 }
 
-function Header() {
-  return (
-    <>
-      <Box
-        styleSheet={{
-          width: '100%',
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Text variant='heading5'>CHAT</Text>
-        <Button
-          variant='tertiary'
-          colorVariant='neutral'
-          label='Logout'
-          href='/'
-        />
-      </Box>
-    </>
-  );
-}
-
 function MessageList(props) {
   return (
     <Box
+      id='listMessage'
       tag='ul'
       styleSheet={{
         // overflow: 'scroll',
         overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column-reverse',
-        flex: 1,
         color: appConfig.theme.colors.neutrals['000'],
-        marginBottom: '16px',
+        height: '100%'
       }}
     >
       {props.messages.map((message) => {
@@ -217,7 +267,7 @@ function MessageList(props) {
                 variant='tertiary'
                 onClick={(e) => {
                   //if (confirm('Deseja realmente deletar a mensagem?'))
-                    props.onDeleteMessage(message.id);
+                  props.onDeleteMessage(message.id);
                 }}
               />
             </Box>

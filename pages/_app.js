@@ -25,6 +25,27 @@ function GlobalStyle() {
         flex: 1;
       }
       /* ./App fit Height */ 
+
+      /* For Firefox Browser */
+      .scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #F1F1F1 #212931;
+      }
+
+
+      /* For Chrome, EDGE, Opera, Others */
+      .scrollbar::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      .scrollbar::-webkit-scrollbar-track { 
+        background: #212931;
+      }
+
+      .scrollbar::-webkit-scrollbar-thumb { 
+        background: #F1F1F1;
+      }
+
     `}</style>
   );
 }

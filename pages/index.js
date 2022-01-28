@@ -61,7 +61,7 @@ export default function LoginPage() {
             as='form'
             onSubmit={(e) => {
               e.preventDefault();
-              router.push('/chat');
+              router.push(`/chat?username=${username}`);
             }}
             styleSheet={{
               display: 'flex',
