@@ -9,6 +9,7 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
+import { ButtonSendSticker } from '../components/ButtonSendSticker';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
 import appConfig from '../config.json';
@@ -18,11 +19,41 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function ChatPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [currentUser, setCurrentUser] = useState('');
   const [messageList, setMessageList] = useState([]);
-  const router = useRouter();
+
+  function listenerRealtime(onInsert, onDelete) {
+    return supabaseClient
+      .from('messages')
+      .on('*', (data) => {
+        if (data.eventType === 'INSERT') onInsert(data.new);
+        else if (data.eventType === 'DELETE') onDelete(data.old.id);
+      })
+      .subscribe();
+  }
+
+  // function listenerDeleteRealtime(deleteMessage) {
+  //   return supabaseClient
+  //     .from('messages')
+  //     .on('DELETE', (data) => {
+  //       deleteMessage(data.old.id);
+  //     })
+  //     .subscribe();
+  // }
+
+  function loadMessages() {
+    supabaseClient
+      .from('messages')
+      .select('*')
+      .order('id', { ascending: false })
+      .then(({ data }) => {
+        setIsLoading(false);
+        setMessageList(data);
+      });
+  }
 
   useEffect(() => {
     setIsLoading(true);
@@ -30,47 +61,73 @@ export default function ChatPage() {
     // Set User
     const { username } = router.query;
     setCurrentUser(username);
+    // if (!username) {
+    //   router.push('/');
+    // }
 
-    // Load Messages
-    supabaseClient
-      .from('messages')
-      .select('*')
-      .order('id', { ascending: false })
-      .then(({ data }) => {
-        setIsLoading(false); // remover
-        setMessageList(data);
-      });
+    // Load All Messages
+    loadMessages();
+
+    // Listener Messages Server
+    listenerRealtime(
+      function onInsert(newMessage) {
+        setMessageList((currentList) => {
+          return [newMessage, ...currentList];
+        });
+      },
+      function onDelete(idRemove) {
+        setMessageList((currentList) => {
+          const newList = currentList.filter((item) => item.id !== idRemove);
+          return [...newList];
+        });
+      }
+    );
+
+    // listenerInsertRealtime((newMessage) => {
+    //   console.log('Listner INS: ', newMessage);
+    //   setMessageList((currentList) => {
+    //     return [newMessage, ...currentList];
+    //   });
+    // });
+
+    // listenerDeleteRealtime((idRemove) => {
+    //   setMessageList((currentList) => {
+    //     const newList = currentList.filter((item) => item.id !== idRemove);
+    //     return [...newList];
+    //   });
+    // });
+
   }, []);
 
-  function handleNewMessage() {
+  function handleNewMessage(msg) {
     // Validação
-    if (message.trim() === '') return;
+    if (msg?.trim() === '') return;
 
     const newMessage = {
       //id: messageList.length + 1,
       from: currentUser,
-      text: message,
+      text: msg,
     };
 
     supabaseClient
       .from('messages')
       .insert([newMessage])
       .then(({ data, error }) => {
-        if (!error) setMessageList([data[0], ...messageList]);
+        //if (!error) setMessageList([data[0], ...messageList]);
       });
 
     setMessage('');
   }
 
   function handleDeleteMessage(id) {
-    const newList = messageList.filter((item) => item.id !== id);
+    //const newList = messageList.filter((item) => item.id !== id);
 
     supabaseClient
       .from('messages')
       .delete()
       .match({ id: id })
       .then(({ data, error }) => {
-        if (!error) setMessageList(newList);
+        //if (!error) setMessageList(newList);
       });
   }
 
@@ -103,7 +160,7 @@ export default function ChatPage() {
         }}
       >
         <Header />
-        
+
         <Box
           styleSheet={{
             position: 'relative',
@@ -130,7 +187,7 @@ export default function ChatPage() {
                 right: 0,
                 bottom: 0,
                 left: 0,
-                zindex: 1
+                zindex: 1,
               }}
             >
               <Loading />
@@ -165,7 +222,7 @@ export default function ChatPage() {
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
-                  handleNewMessage();
+                  handleNewMessage(e.target.value);
                 }
               }}
               placeholder='Insira sua mensagem aqui...'
@@ -181,6 +238,11 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
+            <ButtonSendSticker
+              onStickerClick={(sticker) => {
+                handleNewMessage(':sticker: ' + sticker);
+              }}
+            />
             <Button
               label='Enviar'
               variant='primary'
@@ -194,7 +256,7 @@ export default function ChatPage() {
                 mainColorLight: appConfig.theme.colors.primary['500'],
                 mainColorStrong: appConfig.theme.colors.primary['900'],
               }}
-              onClick={() => handleNewMessage()}
+              onClick={() => handleNewMessage(message)}
             />
           </Box>
         </Box>
@@ -214,7 +276,7 @@ function MessageList(props) {
         display: 'flex',
         flexDirection: 'column-reverse',
         color: appConfig.theme.colors.neutrals['000'],
-        height: '100%'
+        height: '100%',
       }}
     >
       {props.messages.map((message) => {
@@ -239,7 +301,12 @@ function MessageList(props) {
                 justifyContent: 'space-between',
               }}
             >
-              <Box>
+              <Box
+                styleSheet={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
                 <Image
                   styleSheet={{
                     width: '20px',
@@ -271,7 +338,17 @@ function MessageList(props) {
                 }}
               />
             </Box>
-            {message.text}
+            {message.text.startsWith(':sticker:') ? (
+              <Image
+                styleSheet={{
+                  maxWidth: '180px',
+                  display: 'inline-block',
+                }}
+                src={message.text.replace(':sticker:', '')}
+              />
+            ) : (
+              message.text
+            )}
           </Text>
         );
       })}
