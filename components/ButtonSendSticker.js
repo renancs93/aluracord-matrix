@@ -13,10 +13,10 @@ export function ButtonSendSticker(props) {
     >
       <Button
         styleSheet={{
-          borderRadius: '50%',
-          padding: '0 3px 0 0',
-          minWidth: '50px',
-          minHeight: '50px',
+          // borderRadius: '50%',
+          // padding: '0 3px 0 0',
+          minWidth: Boolean(props.minWidth) ? props.minWidth : '50px',
+          minHeight: Boolean(props.minHeight) ? props.minHeight : '50px',
           fontSize: '20px',
           marginBottom: '8px',
           lineHeight: '0',

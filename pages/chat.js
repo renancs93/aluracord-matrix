@@ -151,7 +151,7 @@ export default function ChatPage() {
           {isLoading && (
             <div
               style={{
-                backgroundColor: 'rgba(255, 255, 255, .1);',
+                backgroundColor: appConfig.theme.colors.neutrals[800],
                 position: 'absolute',
                 display: 'flex',
                 justifyContent: 'center',
@@ -161,7 +161,7 @@ export default function ChatPage() {
                 right: 0,
                 bottom: 0,
                 left: 0,
-                zindex: 1,
+                zindex: 99,
               }}
             >
               <Loading />
@@ -187,6 +187,7 @@ export default function ChatPage() {
               display: 'flex',
               alignItems: 'center',
               marginTop: 'auto',
+              gap: '5px'
             }}
           >
             <TextField
@@ -206,18 +207,19 @@ export default function ChatPage() {
                 resize: 'none',
                 borderRadius: '5px',
                 padding: '6px 8px',
-                marginRight: '12px',
+                // marginRight: '12px',
                 backgroundColor: appConfig.theme.colors.neutrals[800],
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
             <ButtonSendSticker
+              minHeight='45px'
               onStickerClick={(sticker) => {
                 handleNewMessage(':sticker: ' + sticker);
               }}
             />
             <Button
-              label='Enviar'
+              label="Enviar"
               variant='primary'
               styleSheet={{
                 height: '80%',
@@ -230,7 +232,7 @@ export default function ChatPage() {
                 mainColorStrong: appConfig.theme.colors.primary['900'],
               }}
               onClick={() => handleNewMessage(message)}
-            />
+            ></Button>
           </Box>
         </Box>
       </Box>
@@ -262,6 +264,7 @@ function MessageList(props) {
               borderRadius: '5px',
               padding: '6px',
               marginBottom: '12px',
+              marginRight: '10px',
               hover: {
                 backgroundColor: appConfig.theme.colors.neutrals[700],
               },

@@ -25,9 +25,9 @@ export default function LoginPage() {
   const [counter, setCounter] = useState(username.length);
   const router = useRouter();
 
-  useEffect(()=>{
-    supabaseClient .removeAllSubscriptions();
-  });
+  useEffect(() => {
+    supabaseClient.removeAllSubscriptions();
+  }, []);
 
   return (
     <>
@@ -92,6 +92,7 @@ export default function LoginPage() {
             </Text>
 
             <TextField
+              placeholder='Usuário do Github'
               value={username}
               onChange={(e) => {
                 setUsername(e.target.value);
@@ -108,19 +109,18 @@ export default function LoginPage() {
               }}
             />
 
-            {counter > 2 && (
-              <Button
-                type='submit'
-                label='Entrar'
-                fullWidth
-                buttonColors={{
-                  contrastColor: appConfig.theme.colors.neutrals['000'],
-                  mainColor: appConfig.theme.colors.primary[500],
-                  mainColorLight: appConfig.theme.colors.primary[400],
-                  mainColorStrong: appConfig.theme.colors.primary[600],
-                }}
-              />
-            )}
+            <Button
+              disabled={counter > 0 ? false : true}
+              type='submit'
+              label='Entrar'
+              fullWidth
+              buttonColors={{
+                contrastColor: appConfig.theme.colors.neutrals['000'],
+                mainColor: appConfig.theme.colors.primary[500],
+                mainColorLight: appConfig.theme.colors.primary[400],
+                mainColorStrong: appConfig.theme.colors.primary[600],
+              }}
+            />
           </Box>
           {/* Formulário */}
           {/* Photo Area */}
@@ -139,7 +139,7 @@ export default function LoginPage() {
               minHeight: '240px',
             }}
           >
-            {counter > 2 && (
+            {counter > 0 && (
               <>
                 <Image
                   styleSheet={{
