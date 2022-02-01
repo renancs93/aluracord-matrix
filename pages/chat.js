@@ -170,7 +170,6 @@ export default function ChatPage() {
 
           <Box
             id='listContainer'
-            className='scrollbar'
             styleSheet={{
               overflowY: 'auto',
               // marginBottom: '16px',
@@ -244,6 +243,7 @@ function MessageList(props) {
     <Box
       id='listMessage'
       tag='ul'
+      className='scrollbar'
       styleSheet={{
         // overflow: 'scroll',
         overflowY: 'auto',

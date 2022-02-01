@@ -62,6 +62,7 @@ export function ButtonSendSticker(props) {
           </Text>
           <Box
             tag="ul"
+            className='scrollbar'
             styleSheet={{
               display: 'flex',
               flexWrap: 'wrap',
