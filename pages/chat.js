@@ -6,17 +6,13 @@ import {
   Button,
   Icon,
 } from '@skynexui/components';
-import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { ButtonSendSticker } from '../components/ButtonSendSticker';
 import Header from '../components/Header';
 import Loading from '../components/Loading';
 import appConfig from '../config.json';
-
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import supabaseClient from '../lib/supabaseClient';
 
 export default function ChatPage() {
   const router = useRouter();
@@ -28,23 +24,14 @@ export default function ChatPage() {
   function listenerRealtime(onInsert, onDelete) {
     return supabaseClient
       .from('messages')
-      .on('*', (data) => {
-        if (data.eventType === 'INSERT') onInsert(data.new);
-        else if (data.eventType === 'DELETE') onDelete(data.old.id);
-      })
+      .on('INSERT', (data) => onInsert(data.new))
+      .on('DELETE', (data) => onDelete(data.old.id))
       .subscribe();
   }
 
-  // function listenerDeleteRealtime(deleteMessage) {
-  //   return supabaseClient
-  //     .from('messages')
-  //     .on('DELETE', (data) => {
-  //       deleteMessage(data.old.id);
-  //     })
-  //     .subscribe();
-  // }
-
   function loadMessages() {
+    setIsLoading(true);
+
     supabaseClient
       .from('messages')
       .select('*')
@@ -55,47 +42,34 @@ export default function ChatPage() {
       });
   }
 
+  function onInsert(newMessage){
+    setMessageList((currentList) => {
+      return [newMessage, ...currentList];
+    });
+  }
+
+  function onDelete(idRemove){
+    setMessageList((currentList) => {
+      const newList = currentList.filter((item) => item.id !== idRemove);
+      return [...newList];
+    });
+  }
+  
+
   useEffect(() => {
-    setIsLoading(true);
 
     // Set User
-    const { username } = router.query;
-    setCurrentUser(username);
-    // if (!username) {
-    //   router.push('/');
-    // }
+    const user = localStorage.getItem('username');
+    setCurrentUser(user);
+    if (!user) {
+      router.push('/');
+    }
 
     // Load All Messages
     loadMessages();
 
     // Listener Messages Server
-    listenerRealtime(
-      function onInsert(newMessage) {
-        setMessageList((currentList) => {
-          return [newMessage, ...currentList];
-        });
-      },
-      function onDelete(idRemove) {
-        setMessageList((currentList) => {
-          const newList = currentList.filter((item) => item.id !== idRemove);
-          return [...newList];
-        });
-      }
-    );
-
-    // listenerInsertRealtime((newMessage) => {
-    //   console.log('Listner INS: ', newMessage);
-    //   setMessageList((currentList) => {
-    //     return [newMessage, ...currentList];
-    //   });
-    // });
-
-    // listenerDeleteRealtime((idRemove) => {
-    //   setMessageList((currentList) => {
-    //     const newList = currentList.filter((item) => item.id !== idRemove);
-    //     return [...newList];
-    //   });
-    // });
+    listenerRealtime(onInsert, onDelete);
 
   }, []);
 

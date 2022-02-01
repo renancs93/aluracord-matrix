@@ -1,7 +1,8 @@
 import { Box, Button, Text, TextField, Image } from '@skynexui/components';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import appConfig from '../config.json';
+import supabaseClient from '../lib/supabaseClient';
 
 function Title(props) {
   const Tag = props.tag || 'h1';
@@ -20,9 +21,14 @@ function Title(props) {
 }
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('renancs93');
+  const [username, setUsername] = useState('');
   const [counter, setCounter] = useState(username.length);
   const router = useRouter();
+
+  useEffect(()=>{
+    supabaseClient .removeAllSubscriptions();
+  });
+
   return (
     <>
       <Box
@@ -61,7 +67,8 @@ export default function LoginPage() {
             as='form'
             onSubmit={(e) => {
               e.preventDefault();
-              router.push(`/chat?username=${username}`);
+              localStorage.setItem('username', username);
+              router.push('/chat');
             }}
             styleSheet={{
               display: 'flex',

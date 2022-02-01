@@ -1,6 +1,11 @@
 import { Box, Button, Text } from '@skynexui/components';
 
 export default function Header() {
+  
+  function onLogout(){
+    localStorage.removeItem('username');
+  }
+  
   return (
     <>
       <Box
@@ -18,6 +23,7 @@ export default function Header() {
           colorVariant='neutral'
           label='Logout'
           href='/'
+          onClick={()=> onLogout()}
         />
       </Box>
     </>
